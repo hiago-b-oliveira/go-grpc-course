@@ -1,10 +1,10 @@
 package main
 
 import (
+	"client-server-boilerplate/greet/greetpb"
 	"google.golang.org/grpc"
 	"log"
 	"net"
-	"validating-configs/greet/greetpb"
 )
 
 func main() {

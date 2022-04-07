@@ -1,4 +1,4 @@
-module validating-configs
+module client-server-boilerplate
 
 go 1.17
 

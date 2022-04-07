@@ -1,11 +1,11 @@
 package main
 
 import (
+	"client-server-boilerplate/greet/greetpb"
 	"fmt"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"log"
-	"validating-configs/greet/greetpb"
 )
 
 func main() {
