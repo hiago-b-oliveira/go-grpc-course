@@ -1,7 +1,7 @@
 package main
 
 import (
-	"client-server-boilerplate/greet/greetpb"
+	"client-server-boilerplate/calculator/calculatorpb"
 	"context"
 	"fmt"
 	"google.golang.org/grpc"
@@ -18,18 +18,18 @@ func main() {
 
 	defer func() { _ = cc.Close() }()
 
-	c := greetpb.NewGreetServiceClient(cc)
+	c := calculatorpb.NewCalculatorServiceClient(cc)
 	//fmt.Printf("Created client %f", c)
 
 	doUnary(c)
 
 }
 
-func doUnary(c greetpb.GreetServiceClient) {
-	req := &greetpb.GreetRequest{
-		Greeting: &greetpb.Greeting{FirstName: "Hiago", LastName: "Oliveira"},
+func doUnary(c calculatorpb.CalculatorServiceClient) {
+	req := &calculatorpb.CalculatorRequest{
+		Calculation: &calculatorpb.Calculation{A: 1, B: 2},
 	}
-	res, err := c.Greet(context.Background(), req)
+	res, err := c.Sum(context.Background(), req)
 	if err != nil {
 		log.Fatalf("error while calling Greet RPC: %v", err)
 	}
