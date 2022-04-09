@@ -23,9 +23,28 @@ func main() {
 	//fmt.Printf("Created client %f", c)
 
 	//doUnary(c)
+	//doServerStreaming(err, c)
 
-	doServerStreaming(err, c)
+	doClientStreaming(err, c)
 
+}
+
+func doClientStreaming(err error, c greetpb.GreetServiceClient) {
+	stream, err := c.LongGreet(context.Background())
+	if err != nil {
+		log.Fatalf("error while calling LongGreet: %v/n", err)
+	}
+	for i := 0; i < 10; i++ {
+		stream.Send(&greetpb.LongGreetRequest{
+			Greeting: &greetpb.Greeting{FirstName: fmt.Sprintf("%v [%v]", "Hiago", i)},
+		})
+	}
+
+	result, err := stream.CloseAndRecv()
+	if err != nil {
+		log.Fatalf("error while receiving the result: %v/n", err)
+	}
+	fmt.Printf("Result Received: %v", result.GetResult())
 }
 
 func doServerStreaming(err error, c greetpb.GreetServiceClient) {
