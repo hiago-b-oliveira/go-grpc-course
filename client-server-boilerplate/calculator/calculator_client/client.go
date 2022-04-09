@@ -21,11 +21,38 @@ func main() {
 	c := calculatorpb.NewCalculatorServiceClient(cc)
 	//fmt.Printf("Created client %f", c)
 
-	doUnary(c)
+	doUnarySum(c)
 
+	doDiBiFindMax(c)
 }
 
-func doUnary(c calculatorpb.CalculatorServiceClient) {
+func doDiBiFindMax(c calculatorpb.CalculatorServiceClient) {
+	stream, _ := c.FindMax(context.Background())
+	waitc := make(chan struct{})
+
+	maxResults := make([]int32, 0)
+	go func() {
+		inputs := []int32{1, 5, 3, 6, 2, 20}
+		for _, input := range inputs {
+			stream.Send(&calculatorpb.FindMaxRequest{Value: input})
+		}
+		stream.CloseSend()
+	}()
+	go func() {
+		for {
+			res, err := stream.Recv()
+			if err != nil {
+				close(waitc)
+				return
+			}
+			maxResults = append(maxResults, res.GetValue())
+		}
+	}()
+	<-waitc
+	fmt.Printf("Max Results: %v", maxResults)
+}
+
+func doUnarySum(c calculatorpb.CalculatorServiceClient) {
 	req := &calculatorpb.CalculatorRequest{
 		Calculation: &calculatorpb.Calculation{A: 1, B: 2},
 	}
@@ -33,5 +60,5 @@ func doUnary(c calculatorpb.CalculatorServiceClient) {
 	if err != nil {
 		log.Fatalf("error while calling Greet RPC: %v", err)
 	}
-	log.Printf("Response from Greet: %v\n", res.Result)
+	log.Printf("Sum: %v\n", res.Result)
 }

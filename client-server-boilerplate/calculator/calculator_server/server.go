@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"google.golang.org/grpc"
+	"io"
 	"log"
 	"net"
 )
@@ -20,6 +21,22 @@ func (*server) Sum(_ context.Context, req *calculatorpb.CalculatorRequest) (*cal
 		Result: sum,
 	}
 	return resp, nil
+}
+
+func (*server) FindMax(stream calculatorpb.CalculatorService_FindMaxServer) error {
+	max := int32(-1)
+
+	for {
+		req, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if req.GetValue() > max {
+			max = req.GetValue()
+			stream.Send(&calculatorpb.FindMaxResponse{Value: max})
+		}
+	}
+	return nil
 }
 
 func main() {

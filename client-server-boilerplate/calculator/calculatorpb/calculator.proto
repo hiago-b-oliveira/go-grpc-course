@@ -8,6 +8,14 @@ message Calculation {
   double b = 2;
 }
 
+message FindMaxRequest {
+  int32 value = 1;
+}
+
+message FindMaxResponse {
+  int32 value = 1;
+}
+
 message CalculatorRequest {
   Calculation calculation = 1;
 }
@@ -16,6 +24,9 @@ message CalculatorResponse {
   double result = 1;
 }
 
+
 service CalculatorService {
   rpc Sum(CalculatorRequest) returns (CalculatorResponse) {};
+
+  rpc FindMax(stream FindMaxRequest) returns (stream FindMaxResponse) {};
 }
