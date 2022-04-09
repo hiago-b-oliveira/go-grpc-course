@@ -20,6 +20,9 @@ const _ = grpc.SupportPackageIsVersion7
 type CalculatorServiceClient interface {
 	Sum(ctx context.Context, in *CalculatorRequest, opts ...grpc.CallOption) (*CalculatorResponse, error)
 	FindMax(ctx context.Context, opts ...grpc.CallOption) (CalculatorService_FindMaxClient, error)
+	// error handling
+	// this RPC will throw an exception if the sent number is negative
+	// The error being sent is type of INVALID_ARGUMENT
 	SquareRoot(ctx context.Context, in *SquareRootRequest, opts ...grpc.CallOption) (*SquareRootResponse, error)
 }
 
@@ -86,6 +89,9 @@ func (c *calculatorServiceClient) SquareRoot(ctx context.Context, in *SquareRoot
 type CalculatorServiceServer interface {
 	Sum(context.Context, *CalculatorRequest) (*CalculatorResponse, error)
 	FindMax(CalculatorService_FindMaxServer) error
+	// error handling
+	// this RPC will throw an exception if the sent number is negative
+	// The error being sent is type of INVALID_ARGUMENT
 	SquareRoot(context.Context, *SquareRootRequest) (*SquareRootResponse, error)
 	mustEmbedUnimplementedCalculatorServiceServer()
 }

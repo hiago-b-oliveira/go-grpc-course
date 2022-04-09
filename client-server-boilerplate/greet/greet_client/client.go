@@ -5,7 +5,9 @@ import (
 	"context"
 	"fmt"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/status"
 	"io"
 	"log"
 	"time"
@@ -27,7 +29,26 @@ func main() {
 	//doServerStreaming(err, c)
 	//doClientStreaming(err, c)
 
-	doBiDiStreaming(err, c)
+	//doBiDiStreaming(err, c)
+
+	doUnaryGreetWithDeadline(c, 5*time.Second) // should complete
+	doUnaryGreetWithDeadline(c, 1*time.Second) // should timeout
+}
+
+func doUnaryGreetWithDeadline(c greetpb.GreetServiceClient, timeout time.Duration) {
+	greeting := greetpb.Greeting{FirstName: "Hiago"}
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	res, err := c.GreetWithDeadline(ctx, &greetpb.GreetWithDeadlineRequest{Greeting: &greeting})
+	if err != nil {
+		if statusErr, ok := status.FromError(err); ok && statusErr.Code() == codes.DeadlineExceeded {
+			fmt.Println("Timeout was hit! Deadline was exceeded")
+			return
+		}
+		log.Fatalf("Error while calling GreetWithDeadline RPC: %v\n", err)
+		return
+	}
+	log.Printf("Response from Greet: %v", res.GetResult())
 }
 
 func doBiDiStreaming(err error, c greetpb.GreetServiceClient) {
