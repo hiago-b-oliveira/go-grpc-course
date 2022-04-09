@@ -5,7 +5,9 @@ import (
 	"context"
 	"fmt"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/status"
 	"log"
 )
 
@@ -21,9 +23,29 @@ func main() {
 	c := calculatorpb.NewCalculatorServiceClient(cc)
 	//fmt.Printf("Created client %f", c)
 
-	doUnarySum(c)
+	//doUnarySum(c)
+	//doDiBiFindMax(c)
 
-	doDiBiFindMax(c)
+	calcSquareGRPC(c, 16)
+	calcSquareGRPC(c, -16)
+}
+
+func calcSquareGRPC(c calculatorpb.CalculatorServiceClient, number int32) {
+	res, err := c.SquareRoot(context.Background(), &calculatorpb.SquareRootRequest{Number: number})
+	if err != nil {
+		respErr, ok := status.FromError(err)
+		if ok {
+			fmt.Println(respErr.Message())
+			fmt.Println(respErr.Code())
+			if respErr.Code() == codes.InvalidArgument {
+				fmt.Println("We probably sent a negative number!")
+			}
+		} else {
+			log.Fatalf("Big Error calling SquareRoot: %v", err)
+		}
+		return
+	}
+	fmt.Printf("Result of square root of %v: %v\n", number, res.GetNumberRoot())
 }
 
 func doDiBiFindMax(c calculatorpb.CalculatorServiceClient) {
