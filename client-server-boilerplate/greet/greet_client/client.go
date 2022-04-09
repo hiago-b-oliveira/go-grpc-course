@@ -8,6 +8,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"io"
 	"log"
+	"time"
 )
 
 func main() {
@@ -24,9 +25,49 @@ func main() {
 
 	//doUnary(c)
 	//doServerStreaming(err, c)
+	//doClientStreaming(err, c)
 
-	doClientStreaming(err, c)
+	doBiDiStreaming(err, c)
+}
 
+func doBiDiStreaming(err error, c greetpb.GreetServiceClient) {
+	stream, err := c.GreetEveryone(context.Background())
+	if err != nil {
+		log.Fatalf("Error while creating stream: %v", err)
+		return
+	}
+
+	waitc := make(chan struct{})
+
+	go func() {
+		names := []string{"Hiago", "John", "Patric", "Marie"}
+		for _, name := range names {
+			fmt.Println("Sending a request: " + name)
+			req := &greetpb.GreetEveryoneRequest{
+				Greeting: &greetpb.Greeting{FirstName: name},
+			}
+			stream.Send(req)
+			time.Sleep(1 * time.Second)
+		}
+		stream.CloseSend()
+	}()
+
+	go func() {
+		for {
+			res, err := stream.Recv()
+			if err == io.EOF {
+				close(waitc)
+				return
+			}
+			if err != nil {
+				close(waitc)
+				log.Fatalf("Error while receiving: %v", err)
+				return
+			}
+			fmt.Printf("Received: %v\n", res)
+		}
+	}()
+	<-waitc
 }
 
 func doClientStreaming(err error, c greetpb.GreetServiceClient) {

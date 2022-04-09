@@ -26,7 +26,7 @@ func (*server) Greet(_ context.Context, req *greetpb.GreetRequest) (*greetpb.Gre
 	return &res, nil
 }
 
-func (s *server) GreetManyTimes(req *greetpb.GreetManyTimesRequest, stream greetpb.GreetService_GreetManyTimesServer) (err error) {
+func (*server) GreetManyTimes(req *greetpb.GreetManyTimesRequest, stream greetpb.GreetService_GreetManyTimesServer) (err error) {
 	fmt.Printf("GrGreetManyTimes function was invoked with %v\n", req)
 	firstName := req.GetGreeting().GetFirstName()
 	for i := 0; i < 10; i++ {
@@ -40,7 +40,7 @@ func (s *server) GreetManyTimes(req *greetpb.GreetManyTimesRequest, stream greet
 	return nil
 }
 
-func (s *server) LongGreet(stream greetpb.GreetService_LongGreetServer) error {
+func (*server) LongGreet(stream greetpb.GreetService_LongGreetServer) error {
 	fmt.Printf("LongGreet function was invoked with a streaming request\n")
 	result := ""
 	for {
@@ -53,10 +53,31 @@ func (s *server) LongGreet(stream greetpb.GreetService_LongGreetServer) error {
 		}
 		if err != nil {
 			log.Fatalf("Error while reading client stream: %v \n", err)
+			return err
 		}
 
 		firstName := req.GetGreeting().GetFirstName()
 		result = fmt.Sprintf("%vHello %v! ", result, firstName)
+	}
+}
+func (*server) GreetEveryone(stream greetpb.GreetService_GreetEveryoneServer) error {
+	fmt.Printf("GreetEveryone function was invoked with a streaming BiDi request\n")
+
+	for {
+		req, err := stream.Recv()
+		if err == io.EOF {
+			return nil
+		}
+		if err != nil {
+			log.Fatalf("Error while reading client stream: %v \n", err)
+			return err
+		}
+		firstName := req.GetGreeting().GetFirstName()
+		response := &greetpb.GreetEveryoneResponse{Result: fmt.Sprintf("Hello %s !", firstName)}
+		if err := stream.Send(response); err != nil {
+			log.Fatalf("Error while sending data to client: %v", err)
+			return err
+		}
 	}
 }
 
