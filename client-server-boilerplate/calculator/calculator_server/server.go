@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
 	"io"
 	"log"
@@ -60,6 +61,8 @@ func main() {
 	}
 	s := grpc.NewServer()
 	calculatorpb.RegisterCalculatorServiceServer(s, &server{})
+
+	reflection.Register(s) // Allow us to use a CLI: https://github.com/ktr0731/evans
 
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("failed to serve:%v\n", err)
