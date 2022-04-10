@@ -1,4 +1,4 @@
 **/.idea/
 **/ssl/ca*
 **/ssl/server*
-
+**/data_db/*
