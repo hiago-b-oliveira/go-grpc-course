@@ -1,1 +1,4 @@
 **/.idea/
+**/ssl/ca*
+**/ssl/server*
+
