@@ -34,6 +34,10 @@ func main() {
 
 	blog3, err := c.ReadBlog(context.Background(), &blogpb.ReadBlogRequest{BlogId: "ffffffffffffffffffffffff"})
 	fmt.Printf("Reading blog... Blog: %v, Error: %v\n", blog3, err)
+
+	blogCreated.Title = "gRPC Go Course"
+	updatedBlog, err := c.UpdateBlog(context.Background(), &blogpb.UpdateBlogRequest{Blog: blogCreated})
+	fmt.Printf("Updated blog: %v, err: %v\n", updatedBlog, err)
 }
 
 func createBlog(c blogpb.BlogServiceClient, blog *blogpb.Blog) *blogpb.Blog {

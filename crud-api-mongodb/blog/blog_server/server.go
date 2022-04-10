@@ -41,6 +41,15 @@ func (*server) CreateBlog(ctx context.Context, req *blogpb.CreateBlogRequest) (*
 
 func (*server) ReadBlog(ctx context.Context, req *blogpb.ReadBlogRequest) (*blogpb.ReadBlogResponse, error) {
 	blogId := req.GetBlogId()
+
+	data, err := findBlogById(ctx, blogId)
+	if err != nil {
+		return nil, err
+	}
+	return &blogpb.ReadBlogResponse{Blog: blogpb.CreateBlogFromBlogItem(data)}, nil
+}
+
+func findBlogById(ctx context.Context, blogId string) (*model.BlogItem, error) {
 	oid, err := primitive.ObjectIDFromHex(blogId)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, fmt.Sprintf("Invalid blog id: %v", blogId))
@@ -52,8 +61,27 @@ func (*server) ReadBlog(ctx context.Context, req *blogpb.ReadBlogRequest) (*blog
 	if err := result.Decode(data); err != nil {
 		return nil, status.Errorf(codes.NotFound, fmt.Sprintf("Cannot find blog with specified ID: %v", err))
 	}
+	return data, nil
+}
 
-	return &blogpb.ReadBlogResponse{Blog: blogpb.CreateBlogFromBlogItem(data)}, nil
+func (*server) UpdateBlog(ctx context.Context, req *blogpb.UpdateBlogRequest) (*blogpb.UpdateBlogResponse, error) {
+	blog := req.GetBlog()
+	blogId := blog.GetId()
+	currBlog, err := findBlogById(ctx, blogId)
+	if err != nil {
+		return nil, err
+	}
+
+	currBlog.Title = blog.GetTitle()
+	currBlog.AuthorID = blog.GetAuthorId()
+	currBlog.Content = blog.GetContent()
+
+	_, err = collection.ReplaceOne(ctx, bson.M{"_id": currBlog.ID}, currBlog)
+	if err != nil {
+		return nil, status.Error(codes.Internal, fmt.Sprintf("Cannot update object: %v", err))
+	}
+	return &blogpb.UpdateBlogResponse{Blog: blogpb.CreateBlogFromBlogItem(currBlog)}, nil
+
 }
 
 func main() {
