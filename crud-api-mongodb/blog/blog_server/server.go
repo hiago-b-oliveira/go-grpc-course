@@ -3,7 +3,9 @@ package main
 import (
 	"context"
 	"crud-api-mongodb/blog/blogpb"
+	"crud-api-mongodb/blog/model"
 	"fmt"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -34,8 +36,24 @@ func (*server) CreateBlog(ctx context.Context, req *blogpb.CreateBlogRequest) (*
 	oid, _ := res.InsertedID.(primitive.ObjectID)
 	blogItem.ID = oid
 
-	createBlogResponse := blogpb.CreateBlogResponseFromBlogItem(blogItem)
-	return createBlogResponse, nil
+	return &blogpb.CreateBlogResponse{Blog: blogpb.CreateBlogFromBlogItem(blogItem)}, nil
+}
+
+func (*server) ReadBlog(ctx context.Context, req *blogpb.ReadBlogRequest) (*blogpb.ReadBlogResponse, error) {
+	blogId := req.GetBlogId()
+	oid, err := primitive.ObjectIDFromHex(blogId)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, fmt.Sprintf("Invalid blog id: %v", blogId))
+	}
+
+	result := collection.FindOne(ctx, bson.M{"_id": oid})
+
+	data := &model.BlogItem{}
+	if err := result.Decode(data); err != nil {
+		return nil, status.Errorf(codes.NotFound, fmt.Sprintf("Cannot find blog with specified ID: %v", err))
+	}
+
+	return &blogpb.ReadBlogResponse{Blog: blogpb.CreateBlogFromBlogItem(data)}, nil
 }
 
 func main() {
