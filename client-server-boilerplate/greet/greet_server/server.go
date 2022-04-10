@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/status"
 	"io"
 	"log"
@@ -104,7 +105,14 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to listen: %v\n", err)
 	}
-	s := grpc.NewServer()
+
+	creds, sslError := credentials.NewServerTLSFromFile("ssl/server.crt", "ssl/server.pem")
+	if sslError != nil {
+		log.Fatalf("Failed to serve: %v", sslError)
+		return
+	}
+
+	s := grpc.NewServer(grpc.Creds(creds))
 	greetpb.RegisterGreetServiceServer(s, &server{})
 
 	if err := s.Serve(lis); err != nil {
