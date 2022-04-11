@@ -96,7 +96,24 @@ func (*server) UpdateBlog(ctx context.Context, req *blogpb.UpdateBlogRequest) (*
 		return nil, status.Error(codes.Internal, fmt.Sprintf("Cannot update object: %v", err))
 	}
 	return &blogpb.UpdateBlogResponse{Blog: blogpb.CreateBlogFromBlogItem(currBlog)}, nil
+}
 
+func (*server) ListBlog(_ *blogpb.ListBlogRequest, stream blogpb.BlogService_ListBlogServer) error {
+
+	cur, err := collection.Find(context.Background(), bson.M{})
+	if err != nil {
+		return status.Errorf(codes.Internal, fmt.Sprintf("Listing blogs failed: %v\n", err))
+	}
+	defer func() { _ = cur.Close(context.Background()) }()
+
+	for cur.Next(context.Background()) {
+		data := &model.BlogItem{}
+		if err := cur.Decode(data); err != nil {
+			return status.Errorf(codes.Internal, fmt.Sprintf("Error while decoding data: %v", err))
+		}
+		stream.Send(&blogpb.ListBlogResponse{Blog: blogpb.CreateBlogFromBlogItem(data)})
+	}
+	return nil
 }
 
 func main() {
