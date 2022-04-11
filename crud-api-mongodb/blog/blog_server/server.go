@@ -49,6 +49,21 @@ func (*server) ReadBlog(ctx context.Context, req *blogpb.ReadBlogRequest) (*blog
 	return &blogpb.ReadBlogResponse{Blog: blogpb.CreateBlogFromBlogItem(data)}, nil
 }
 
+func (*server) DeleteBlog(ctx context.Context, req *blogpb.DeleteBlogRequest) (*blogpb.DeleteBlogResponse, error) {
+	blogId := req.GetBlogId()
+	blog, err := findBlogById(ctx, blogId)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = collection.DeleteOne(ctx, bson.M{"_id": blog.ID})
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, fmt.Sprintf("Failed while deleting: %v", err))
+	}
+
+	return &blogpb.DeleteBlogResponse{BlogId: blogId}, status.Errorf(codes.Unimplemented, "method DeleteBlog not implemented")
+}
+
 func findBlogById(ctx context.Context, blogId string) (*model.BlogItem, error) {
 	oid, err := primitive.ObjectIDFromHex(blogId)
 	if err != nil {
